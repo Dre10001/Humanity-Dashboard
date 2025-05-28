@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Humanity Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: white;
+      color: #003366;
+      padding: 20px;
+      font-size: 14px;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .dashboard {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      gap: 12px;
+    }
+    .card {
+      background: #e6f2ff;
+      border-left: 5px solid #007BFF;
+      padding: 12px;
+      border-radius: 8px;
+      min-width: 300px;
+      max-width: 350px;
+      flex: 0 0 auto;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .card h2 {
+      font-size: 16px;
+      margin-top: 0;
+    }
+    .tooltip {
+      display: inline-block;
+      background-color: #007BFF;
+      color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      text-align: center;
+      line-height: 16px;
+      font-size: 12px;
+      cursor: help;
+      margin-left: 4px;
+    }
+    .tooltip:hover::after {
+      content: attr(title);
+      display: block;
+      background: #003366;
+      color: white;
+      padding: 5px;
+      border-radius: 4px;
+      position: absolute;
+      z-index: 1;
+      white-space: pre-wrap;
+      width: 200px;
+    }
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+    ul {
+      padding-left: 18px;
+      margin: 0;
+    }
+    footer {
+      margin-top: 40px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌍 Humanity Dashboard</h1>
+  <div class="dashboard">
+
+    <div class="card">
+      <h2>Environment</h2>
+      <p>Global EPI Score: 43.1 / 100 <span class="tooltip" title="Environmental Performance Index: measures country-level performance on environmental health and ecosystem vitality.">i</span></p>
+      <p>Planetary Boundaries Breached: 6 / 9</p>
+      <ul>
+        <li>Climate Change – Breached</li>
+        <li>Biosphere Integrity – Breached</li>
+        <li>Land-System Change – Breached</li>
+        <li>Biogeochemical Flows – Breached</li>
+        <li>Freshwater Use – Breached</li>
+        <li>Novel Entities – Breached</li>
+        <li>Ocean Acidification – Within</li>
+        <li>Atmospheric Aerosol Loading – Within</li>
+        <li>Stratospheric Ozone Depletion – Within</li>
+      </ul>
+      <br>
+      <canvas id="environmentPie"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>Displacement & Conflict</h2>
+      <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div style="flex: 1 1 300px;">
+          <canvas id="displacementBreakdownPie"></canvas>
+        </div>
+        <div style="flex: 1 1 300px;">
+          <canvas id="conflictPie"></canvas>
+        </div>
+      </div>
+      <p style="margin-top: 10px; font-style: italic; font-size: 12px;">
+        All percentages represent shares of the global population or total countries. Total displaced/homeless includes ~3.42% of the global population. Conflict figures represent counts and proportions of 195 countries.
+      </p>
+    </div>
+    
+
+    <div class="card">
+      <h2>Human Wellbeing</h2>
+      <p>HDI: 0.739 / 1.000 <span class="tooltip" title="Human Development Index combines life expectancy, education and income per capita.">i</span></p>
+      <p>Global Life Expectancy: 72.98 years</p>
+      <p>Global Hunger:</p>
+      <canvas id="hungerBreakdownPie"></canvas>
+      <p>Physical Illness: 8% (Estimation)</p>
+      <p>Depression: 3.8% (Estimation)</p>
+      <p>Loneliness: 24% (Estimation)</p>
+    </div>
+
+    <div class="card">
+      <h2>Societal Wellbeing</h2>
+      <p>Freedom Status:</p>
+      <canvas id="freedomPie"></canvas>
+      <p>Government Type:</p>
+      <canvas id="democracyPie"></canvas>
+      <p>Happiness:</p>
+      <canvas id="happinessPie"></canvas>
+      <p>Gallup World Poll - Views on the Future:</p>
+      <canvas id="directionPie"></canvas>
+    </div>
+
+  </div>
+
+  <footer>
+    <strong>Sources & Caveats:</strong>
+    <p>Data from: UNHCR, IOM, World Bank, Our World in Data, Freedom House, EIU Democracy Index, Gallup World Poll, Global Report on Food Crises, UNDP, WHO, and others. Note: Some figures represent estimates, and methodologies may vary. Most percentages reflect share of global population or countries unless stated otherwise. Total countries counted: 195. Displacement categories may overlap in some estimates. Pie slices are rounded estimates. Interpretation should be cautious in light of complex underlying data.</p>
+  </footer>
+
+  <script>
+    Chart.register(ChartDataLabels);
+
+    const environmentPie = new Chart(document.getElementById('environmentPie'), {
+      type: 'pie',
+      data: {
+        labels: ['Breached', 'Within Limits'],
+        datasets: [{ data: [6, 3], backgroundColor: ['#ff4d4d', '#66cc66'] }]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' }, datalabels: { formatter: v => Math.round(v/9*100)+'%' } }
+      }
+    });
+
+    const displacementBreakdownPie = new Chart(document.getElementById('displacementBreakdownPie'), {
+  type: 'pie',
+  data: {
+    labels: [
+      'Refugees (0.55%)', 
+      'Internally Displaced (0.91%)', 
+      'Stateless (0.06%)', 
+      'Homeless (1.90%)',
+      'Not Displaced (96.58%)'
+    ],
+    datasets: [{
+      data: [0.55, 0.91, 0.06, 1.90, 96.58],
+      backgroundColor: ['#3399FF', '#66cc66', '#ffd54f', '#ff4d4d', '#cccccc']
+    }]
+  },
+  options: {
+    plugins: { 
+      legend: { position: 'bottom' }, 
+      datalabels: { 
+        formatter: v => v.toFixed(2) + '%',
+        color: '#003366',
+        font: { weight: 'bold' }
+      } 
+    }
+  }
+});
+
+    const conflictPie = new Chart(document.getElementById('conflictPie'), {
+      type: 'pie',
+      data: {
+        labels: ['States in Conflict (75)', 'Not in Conflict (120)'],
+        datasets: [{ data: [75, 120], backgroundColor: ['#ff4d4d', '#66cc66'] }]
+      },
+      options: {
+        plugins: {
+          legend: { position: 'bottom' },
+          datalabels: {
+            formatter: (v, ctx) => {
+              const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+              return v + ' (' + Math.round((v / total) * 100) + '%)';
+            }
+          }
+        }
+      }
+    });
+
+    const hungerBreakdownPie = new Chart(document.getElementById('hungerBreakdownPie'), {
+      type: 'pie',
+      data: {
+        labels: ['Food Secure (70.5%)', 'Food Insecure (20.4%)', 'Severely Food Insecure (9.1%)'],
+        datasets: [{ data: [70.5, 20.4, 9.1], backgroundColor: ['#66cc66', '#ffcc00', '#ff4d4d'] }]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' }, datalabels: { formatter: v => v.toFixed(1) + '%' } }
+      }
+    });
+
+    const freedomPie = new Chart(document.getElementById('freedomPie'), {
+      type: 'pie',
+      data: {
+        labels: ['Free', 'Partly Free', 'Not Free'],
+        datasets: [{ data: [20, 42, 38], backgroundColor: ['#66cc66', '#ffcc00', '#ff4d4d'] }]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' }, datalabels: { formatter: v => v + '%' } }
+      }
+    });
+
+    const democracyPie = new Chart(document.getElementById('democracyPie'), {
+      type: 'pie',
+      data: {
+        labels: ['Full Democracy', 'Flawed Democracy', 'Hybrid Regime', 'Authoritarian'],
+        datasets: [{ data: [6.4, 37.3, 17.9, 38.4], backgroundColor: ['#3399FF', '#66cc66', '#ffd54f', '#ff4d4d'] }]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' }, datalabels: { formatter: v => v.toFixed(1) + '%' } }
+      }
+    });
+
+    const happinessPie = new Chart(document.getElementById('happinessPie'), {
+      type: 'pie',
+      data: {
+        labels: ['Thriving', 'Struggling', 'Suffering'],
+        datasets: [{ data: [26, 57, 17], backgroundColor: ['#66cc66', '#ffcc00', '#ff4d4d'] }]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' }, datalabels: { formatter: v => v + '%' } }
+      }
+    });
+
+    const directionPie = new Chart(document.getElementById('directionPie'), {
+      type: 'pie',
+      data: {
+        labels: ['Optimistic', 'Pessimistic', 'Unsure'],
+        datasets: [{ data: [40, 45, 15], backgroundColor: ['#66cc66', '#ff4d4d', '#999999'] }]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' }, datalabels: { formatter: v => v + '%' } }
+      }
+    });
+  </script>
+</body>
+</html>
